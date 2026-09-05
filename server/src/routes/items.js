@@ -19,7 +19,7 @@ function toItem(row) {
     title: row.title,
     categoryId: row.category_id,
     categoryName: row.category_name,
-    purchasePrice: row.purchase_price,
+    wishlist: !!row.wishlist,
     notes: row.notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -38,7 +38,7 @@ async function categoryExists(categoryId) {
 }
 
 itemsRouter.get("/", async (req, res) => {
-  const { typeId, categoryId, q } = req.query;
+  const { typeId, categoryId, wishlist, q } = req.query;
   const clauses = [];
   const args = [];
 
@@ -49,6 +49,10 @@ itemsRouter.get("/", async (req, res) => {
   if (categoryId) {
     clauses.push("items.category_id = ?");
     args.push(categoryId);
+  }
+  if (wishlist !== undefined) {
+    clauses.push("items.wishlist = ?");
+    args.push(wishlist === "true" ? 1 : 0);
   }
   if (q) {
     clauses.push("(items.title LIKE ? OR categories.name LIKE ?)");
@@ -64,7 +68,7 @@ itemsRouter.get("/", async (req, res) => {
 });
 
 itemsRouter.post("/", requireWrite, async (req, res) => {
-  const { typeId, title, categoryId, purchasePrice, notes } = req.body;
+  const { typeId, title, categoryId, wishlist, notes } = req.body;
 
   if (!typeId || !(await typeExists(typeId))) {
     return res.status(400).json({ error: "typeId is required and must reference an existing type" });
@@ -77,10 +81,10 @@ itemsRouter.post("/", requireWrite, async (req, res) => {
   }
 
   const inserted = await db.execute({
-    sql: `INSERT INTO items (type_id, title, category_id, purchase_price, notes)
+    sql: `INSERT INTO items (type_id, title, category_id, wishlist, notes)
           VALUES (?, ?, ?, ?, ?)
           RETURNING id`,
-    args: [typeId, title, categoryId ?? null, purchasePrice ?? null, notes ?? null],
+    args: [typeId, title, categoryId ?? null, wishlist ? 1 : 0, notes ?? null],
   });
   const result = await db.execute({ sql: `${SELECT_ITEMS} WHERE items.id = ?`, args: [inserted.rows[0].id] });
   res.status(201).json(toItem(result.rows[0]));
@@ -88,7 +92,7 @@ itemsRouter.post("/", requireWrite, async (req, res) => {
 
 itemsRouter.put("/:id", requireWrite, async (req, res) => {
   const { id } = req.params;
-  const { typeId, title, categoryId, purchasePrice, notes } = req.body;
+  const { typeId, title, categoryId, wishlist, notes } = req.body;
 
   const existing = await db.execute({ sql: "SELECT * FROM items WHERE id = ?", args: [id] });
   if (existing.rows.length === 0) {
@@ -104,20 +108,14 @@ itemsRouter.put("/:id", requireWrite, async (req, res) => {
   if (!(await categoryExists(nextCategoryId))) {
     return res.status(400).json({ error: "categoryId does not exist" });
   }
+  const nextWishlist = wishlist !== undefined ? (wishlist ? 1 : 0) : current.wishlist;
 
   await db.execute({
     sql: `UPDATE items SET
-            type_id = ?, title = ?, category_id = ?, purchase_price = ?, notes = ?,
+            type_id = ?, title = ?, category_id = ?, wishlist = ?, notes = ?,
             updated_at = datetime('now')
           WHERE id = ?`,
-    args: [
-      nextTypeId,
-      title ?? current.title,
-      nextCategoryId,
-      purchasePrice ?? current.purchase_price,
-      notes ?? current.notes,
-      id,
-    ],
+    args: [nextTypeId, title ?? current.title, nextCategoryId, nextWishlist, notes ?? current.notes, id],
   });
   const result = await db.execute({ sql: `${SELECT_ITEMS} WHERE items.id = ?`, args: [id] });
   res.json(toItem(result.rows[0]));

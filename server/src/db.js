@@ -35,7 +35,7 @@ export async function migrate() {
       type_id INTEGER NOT NULL REFERENCES types(id),
       title TEXT NOT NULL,
       category_id INTEGER REFERENCES categories(id),
-      purchase_price REAL,
+      wishlist INTEGER NOT NULL DEFAULT 0,
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -48,6 +48,8 @@ export async function migrate() {
   const hasLegacyType = columns.some((row) => row.name === "type");
   const hasPlatform = columns.some((row) => row.name === "platform");
   const hasCondition = columns.some((row) => row.name === "condition");
+  const hasPurchasePrice = columns.some((row) => row.name === "purchase_price");
+  const hasWishlist = columns.some((row) => row.name === "wishlist");
 
   if (!hasCategoryId) {
     await db.execute("ALTER TABLE items ADD COLUMN category_id INTEGER REFERENCES categories(id)");
@@ -55,11 +57,17 @@ export async function migrate() {
   if (!hasTypeId) {
     await db.execute("ALTER TABLE items ADD COLUMN type_id INTEGER REFERENCES types(id)");
   }
+  if (!hasWishlist) {
+    await db.execute("ALTER TABLE items ADD COLUMN wishlist INTEGER NOT NULL DEFAULT 0");
+  }
   if (hasPlatform) {
     await db.execute("ALTER TABLE items DROP COLUMN platform");
   }
   if (hasCondition) {
     await db.execute("ALTER TABLE items DROP COLUMN condition");
+  }
+  if (hasPurchasePrice) {
+    await db.execute("ALTER TABLE items DROP COLUMN purchase_price");
   }
 
   if (hasLegacyType) {
@@ -82,18 +90,16 @@ export async function migrate() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type_id INTEGER NOT NULL REFERENCES types(id),
         title TEXT NOT NULL,
-        platform TEXT,
         category_id INTEGER REFERENCES categories(id),
-        condition TEXT,
-        purchase_price REAL,
+        wishlist INTEGER NOT NULL DEFAULT 0,
         notes TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
     `);
     await db.execute(`
-      INSERT INTO items_new (id, type_id, title, platform, category_id, condition, purchase_price, notes, created_at, updated_at)
-      SELECT id, type_id, title, platform, category_id, condition, purchase_price, notes, created_at, updated_at FROM items
+      INSERT INTO items_new (id, type_id, title, category_id, wishlist, notes, created_at, updated_at)
+      SELECT id, type_id, title, category_id, wishlist, notes, created_at, updated_at FROM items
     `);
     await db.execute("DROP TABLE items");
     await db.execute("ALTER TABLE items_new RENAME TO items");

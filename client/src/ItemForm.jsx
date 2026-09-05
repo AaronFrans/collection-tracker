@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const EMPTY = {
   typeId: "",
   title: "",
   categoryId: "",
-  purchasePrice: "",
+  wishlist: false,
   notes: "",
 };
 
@@ -14,6 +14,15 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
       ? { ...EMPTY, ...initial, typeId: initial.typeId ?? "", categoryId: initial.categoryId ?? "" }
       : { ...EMPTY, typeId: types[0]?.id ?? "" }
   );
+
+  // `types` loads asynchronously — if this form (for a new item) mounted before it arrived,
+  // the initial state above locked in an empty typeId. Fill it in once types show up.
+  useEffect(() => {
+    if (!initial && form.typeId === "" && types.length > 0) {
+      setForm((prev) => ({ ...prev, typeId: types[0].id }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [types]);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -25,7 +34,6 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
       ...form,
       typeId: form.typeId === "" ? null : Number(form.typeId),
       categoryId: form.categoryId === "" ? null : Number(form.categoryId),
-      purchasePrice: form.purchasePrice === "" ? null : Number(form.purchasePrice),
     });
     if (!initial) setForm({ ...EMPTY, typeId: types[0]?.id ?? "" });
   }
@@ -68,14 +76,13 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
             ))}
           </select>
         </label>
-        <label>
-          Purchase price
+        <label className="checkbox-label">
           <input
-            type="number"
-            step="0.01"
-            value={form.purchasePrice ?? ""}
-            onChange={(e) => update("purchasePrice", e.target.value)}
+            type="checkbox"
+            checked={form.wishlist}
+            onChange={(e) => update("wishlist", e.target.checked)}
           />
+          Wishlist
         </label>
       </div>
       <label>

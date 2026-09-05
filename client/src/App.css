@@ -140,6 +140,20 @@ button.secondary {
   background: rgba(128, 128, 128, 0.25);
 }
 
+.badge-wishlist {
+  background: #b0762b33;
+}
+
+.checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.4rem !important;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
 .item-actions {
   display: flex;
   gap: 0.4rem;

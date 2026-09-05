@@ -27,9 +27,9 @@ export function ItemList({ items, onUpdate, onDelete, types = [], categories = [
             <>
               <div className="item-info">
                 <span className="badge">{item.typeName}</span>
+                {item.wishlist && <span className="badge badge-wishlist">Wishlist</span>}
                 <strong>{item.title}</strong>
                 {item.categoryName && <span className="meta">{item.categoryName}</span>}
-                {item.purchasePrice != null && <span className="meta">${item.purchasePrice.toFixed(2)}</span>}
                 {item.notes && <p className="notes">{item.notes}</p>}
               </div>
               {!readOnly && (

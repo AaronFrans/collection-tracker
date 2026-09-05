@@ -15,6 +15,7 @@ export default function App() {
   const [categories, setCategories] = useState([]);
   const [typeFilter, setTypeFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [wishlistFilter, setWishlistFilter] = useState("");
   const [search, setSearch] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,7 @@ export default function App() {
       const params = {};
       if (typeFilter) params.typeId = typeFilter;
       if (categoryFilter) params.categoryId = categoryFilter;
+      if (wishlistFilter) params.wishlist = wishlistFilter;
       if (search) params.q = search;
       setItems(await api.listItems(params));
     } catch (err) {
@@ -71,7 +73,7 @@ export default function App() {
   useEffect(() => {
     refreshItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter, categoryFilter, search]);
+  }, [typeFilter, categoryFilter, wishlistFilter, search]);
 
   async function handleCreate(values) {
     try {
@@ -218,6 +220,11 @@ export default function App() {
                 {category.name}
               </option>
             ))}
+          </select>
+          <select value={wishlistFilter} onChange={(e) => setWishlistFilter(e.target.value)}>
+            <option value="">Owned + wishlist</option>
+            <option value="false">Owned only</option>
+            <option value="true">Wishlist only</option>
           </select>
           <input
             placeholder="Search title / category"
