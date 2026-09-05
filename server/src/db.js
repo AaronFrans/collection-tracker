@@ -112,8 +112,8 @@ export async function migrate() {
         parent_id INTEGER REFERENCES items(id),
         wishlist INTEGER NOT NULL DEFAULT 0,
         notes TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
     await db.execute(`

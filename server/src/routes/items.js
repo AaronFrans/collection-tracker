@@ -159,7 +159,9 @@ itemsRouter.post("/", requireWrite, async (req, res) => {
   }
 
   const inserted = await db.execute({
-    sql: `INSERT INTO items (type_id, title, parent_id, wishlist, notes) VALUES (?, ?, ?, ?, ?) RETURNING id`,
+    sql: `INSERT INTO items (type_id, title, parent_id, wishlist, notes, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+          RETURNING id`,
     args: [typeId, title, parentId ?? null, wishlist ? 1 : 0, notes ?? null],
   });
   const itemId = inserted.rows[0].id;
