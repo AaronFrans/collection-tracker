@@ -140,14 +140,6 @@ button.secondary {
   background: rgba(128, 128, 128, 0.25);
 }
 
-.badge-game {
-  background: #2b6cb033;
-}
-
-.badge-collectible {
-  background: #b0762b33;
-}
-
 .item-actions {
   display: flex;
   gap: 0.4rem;
@@ -162,11 +154,11 @@ button.secondary {
   opacity: 0.6;
 }
 
-.category-manager .field-row {
+.named-list-manager .field-row {
   margin-bottom: 0.75rem;
 }
 
-.category-manager input {
+.named-list-manager input {
   flex: 1;
   font: inherit;
   padding: 0.4rem 0.5rem;
@@ -176,7 +168,7 @@ button.secondary {
   color: inherit;
 }
 
-.category-list {
+.chip-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -185,7 +177,7 @@ button.secondary {
   gap: 0.4rem;
 }
 
-.category-chip {
+.chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -202,4 +194,47 @@ button.secondary {
   padding: 0 0.2rem;
   line-height: 1;
   cursor: pointer;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 280px;
+  padding: 1.5rem;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.login-form input {
+  font: inherit;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: transparent;
+  color: inherit;
 }

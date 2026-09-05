@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 const EMPTY = {
-  type: "game",
+  typeId: "",
   title: "",
   platform: "",
   categoryId: "",
@@ -10,9 +10,11 @@ const EMPTY = {
   notes: "",
 };
 
-export function ItemForm({ onSubmit, initial, onCancel, categories = [] }) {
+export function ItemForm({ onSubmit, initial, onCancel, types = [], categories = [] }) {
   const [form, setForm] = useState(
-    initial ? { ...EMPTY, ...initial, categoryId: initial.categoryId ?? "" } : EMPTY
+    initial
+      ? { ...EMPTY, ...initial, typeId: initial.typeId ?? "", categoryId: initial.categoryId ?? "" }
+      : { ...EMPTY, typeId: types[0]?.id ?? "" }
   );
 
   function update(field, value) {
@@ -23,10 +25,11 @@ export function ItemForm({ onSubmit, initial, onCancel, categories = [] }) {
     e.preventDefault();
     onSubmit({
       ...form,
+      typeId: form.typeId === "" ? null : Number(form.typeId),
       categoryId: form.categoryId === "" ? null : Number(form.categoryId),
       purchasePrice: form.purchasePrice === "" ? null : Number(form.purchasePrice),
     });
-    if (!initial) setForm(EMPTY);
+    if (!initial) setForm({ ...EMPTY, typeId: types[0]?.id ?? "" });
   }
 
   return (
@@ -34,9 +37,15 @@ export function ItemForm({ onSubmit, initial, onCancel, categories = [] }) {
       <div className="field-row">
         <label>
           Type
-          <select value={form.type} onChange={(e) => update("type", e.target.value)}>
-            <option value="game">Game</option>
-            <option value="collectible">Collectible</option>
+          <select required value={form.typeId} onChange={(e) => update("typeId", e.target.value)}>
+            <option value="" disabled>
+              Select type
+            </option>
+            {types.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.name}
+              </option>
+            ))}
           </select>
         </label>
         <label className="grow">
@@ -50,16 +59,14 @@ export function ItemForm({ onSubmit, initial, onCancel, categories = [] }) {
         </label>
       </div>
       <div className="field-row">
-        {form.type === "game" && (
-          <label>
-            Platform
-            <input
-              value={form.platform || ""}
-              onChange={(e) => update("platform", e.target.value)}
-              placeholder="e.g. Switch"
-            />
-          </label>
-        )}
+        <label>
+          Platform
+          <input
+            value={form.platform || ""}
+            onChange={(e) => update("platform", e.target.value)}
+            placeholder="e.g. Switch"
+          />
+        </label>
         <label>
           Category
           <select value={form.categoryId ?? ""} onChange={(e) => update("categoryId", e.target.value)}>

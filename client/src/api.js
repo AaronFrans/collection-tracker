@@ -1,10 +1,23 @@
+import { getToken, clearToken } from "./auth";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-async function request(path, options) {
+export class UnauthorizedError extends Error {}
+
+async function request(path, options = {}) {
+  const token = getToken();
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...options,
   });
+
+  if (res.status === 401) {
+    clearToken();
+    throw new UnauthorizedError("unauthorized");
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Request failed: ${res.status}`);
@@ -14,6 +27,14 @@ async function request(path, options) {
 }
 
 export const api = {
+  checkPassword: async (password) => {
+    const res = await fetch(`${API_URL}/api/auth/check`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${password}` },
+    });
+    return res.ok;
+  },
+
   listItems: (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return request(`/api/items${query ? `?${query}` : ""}`);
@@ -25,4 +46,8 @@ export const api = {
   listCategories: () => request("/api/categories"),
   createCategory: (name) => request("/api/categories", { method: "POST", body: JSON.stringify({ name }) }),
   deleteCategory: (id) => request(`/api/categories/${id}`, { method: "DELETE" }),
+
+  listTypes: () => request("/api/types"),
+  createType: (name) => request("/api/types", { method: "POST", body: JSON.stringify({ name }) }),
+  deleteType: (id) => request(`/api/types/${id}`, { method: "DELETE" }),
 };

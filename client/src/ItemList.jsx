@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ItemForm } from "./ItemForm";
 
-export function ItemList({ items, onUpdate, onDelete, categories = [] }) {
+export function ItemList({ items, onUpdate, onDelete, types = [], categories = [] }) {
   const [editingId, setEditingId] = useState(null);
 
   if (items.length === 0) {
@@ -15,6 +15,7 @@ export function ItemList({ items, onUpdate, onDelete, categories = [] }) {
           {editingId === item.id ? (
             <ItemForm
               initial={item}
+              types={types}
               categories={categories}
               onSubmit={(values) => {
                 onUpdate(item.id, values);
@@ -25,7 +26,7 @@ export function ItemList({ items, onUpdate, onDelete, categories = [] }) {
           ) : (
             <>
               <div className="item-info">
-                <span className={`badge badge-${item.type}`}>{item.type}</span>
+                <span className="badge">{item.typeName}</span>
                 <strong>{item.title}</strong>
                 {item.platform && <span className="meta">{item.platform}</span>}
                 {item.categoryName && <span className="meta">{item.categoryName}</span>}

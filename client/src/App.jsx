@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { api } from "./api";
+import { api, UnauthorizedError } from "./api";
+import { getToken, clearToken } from "./auth";
 import { ItemForm } from "./ItemForm";
 import { ItemList } from "./ItemList";
-import { CategoryManager } from "./CategoryManager";
+import { NamedListManager } from "./NamedListManager";
+import { Login } from "./Login";
 import "./App.css";
 
 export default function App() {
+  const [authed, setAuthed] = useState(!!getToken());
   const [items, setItems] = useState([]);
+  const [types, setTypes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [typeFilter, setTypeFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -14,19 +18,34 @@ export default function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  function handleError(err) {
+    if (err instanceof UnauthorizedError) {
+      setAuthed(false);
+      return;
+    }
+    setError(err.message);
+  }
+
   async function refreshItems() {
     try {
       setError(null);
       const params = {};
-      if (typeFilter) params.type = typeFilter;
+      if (typeFilter) params.typeId = typeFilter;
       if (categoryFilter) params.categoryId = categoryFilter;
       if (search) params.q = search;
-      const data = await api.listItems(params);
-      setItems(data);
+      setItems(await api.listItems(params));
     } catch (err) {
-      setError(err.message);
+      handleError(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function refreshTypes() {
+    try {
+      setTypes(await api.listTypes());
+    } catch (err) {
+      handleError(err);
     }
   }
 
@@ -34,25 +53,29 @@ export default function App() {
     try {
       setCategories(await api.listCategories());
     } catch (err) {
-      setError(err.message);
+      handleError(err);
     }
   }
 
   useEffect(() => {
+    if (!authed) return;
+    refreshTypes();
     refreshCategories();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
 
   useEffect(() => {
+    if (!authed) return;
     refreshItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter, categoryFilter, search]);
+  }, [authed, typeFilter, categoryFilter, search]);
 
   async function handleCreate(values) {
     try {
       await api.createItem(values);
       refreshItems();
     } catch (err) {
-      setError(err.message);
+      handleError(err);
     }
   }
 
@@ -61,7 +84,7 @@ export default function App() {
       await api.updateItem(id, values);
       refreshItems();
     } catch (err) {
-      setError(err.message);
+      handleError(err);
     }
   }
 
@@ -70,7 +93,25 @@ export default function App() {
       await api.deleteItem(id);
       refreshItems();
     } catch (err) {
-      setError(err.message);
+      handleError(err);
+    }
+  }
+
+  async function handleCreateType(name) {
+    try {
+      await api.createType(name);
+      refreshTypes();
+    } catch (err) {
+      handleError(err);
+    }
+  }
+
+  async function handleDeleteType(id) {
+    try {
+      await api.deleteType(id);
+      refreshTypes();
+    } catch (err) {
+      handleError(err);
     }
   }
 
@@ -79,7 +120,7 @@ export default function App() {
       await api.createCategory(name);
       refreshCategories();
     } catch (err) {
-      setError(err.message);
+      handleError(err);
     }
   }
 
@@ -89,30 +130,62 @@ export default function App() {
       refreshCategories();
       refreshItems();
     } catch (err) {
-      setError(err.message);
+      handleError(err);
     }
+  }
+
+  function handleLogout() {
+    clearToken();
+    setAuthed(false);
+  }
+
+  if (!authed) {
+    return <Login onSuccess={() => setAuthed(true)} />;
   }
 
   return (
     <div className="app">
-      <h1>Collection Tracker</h1>
+      <div className="page-header">
+        <h1>Collection Tracker</h1>
+        <button className="secondary" onClick={handleLogout}>
+          Log out
+        </button>
+      </div>
+
+      <section className="card">
+        <h2>Types</h2>
+        <NamedListManager
+          items={types}
+          onCreate={handleCreateType}
+          onDelete={handleDeleteType}
+          placeholder="New type, e.g. Board Game"
+        />
+      </section>
 
       <section className="card">
         <h2>Categories</h2>
-        <CategoryManager categories={categories} onCreate={handleCreateCategory} onDelete={handleDeleteCategory} />
+        <NamedListManager
+          items={categories}
+          onCreate={handleCreateCategory}
+          onDelete={handleDeleteCategory}
+          placeholder="New category, e.g. Amiibo"
+        />
       </section>
 
       <section className="card">
         <h2>Add item</h2>
-        <ItemForm onSubmit={handleCreate} categories={categories} />
+        <ItemForm onSubmit={handleCreate} types={types} categories={categories} />
       </section>
 
       <section className="card">
         <div className="toolbar">
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
             <option value="">All types</option>
-            <option value="game">Games</option>
-            <option value="collectible">Collectibles</option>
+            {types.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.name}
+              </option>
+            ))}
           </select>
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
             <option value="">All categories</option>
@@ -133,7 +206,7 @@ export default function App() {
         {loading ? (
           <p>Loading…</p>
         ) : (
-          <ItemList items={items} categories={categories} onUpdate={handleUpdate} onDelete={handleDelete} />
+          <ItemList items={items} types={types} categories={categories} onUpdate={handleUpdate} onDelete={handleDelete} />
         )}
       </section>
     </div>
