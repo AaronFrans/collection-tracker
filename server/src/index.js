@@ -5,7 +5,7 @@ import { migrate } from "./db.js";
 import { itemsRouter } from "./routes/items.js";
 import { categoriesRouter } from "./routes/categories.js";
 import { typesRouter } from "./routes/types.js";
-import { requireAuth } from "./middleware/auth.js";
+import { requireAuth, requireWrite } from "./middleware/auth.js";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -17,7 +17,14 @@ app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
-app.post("/api/auth/check", requireAuth, (req, res) => res.json({ ok: true }));
+app.post("/api/auth/check", (req, res) => {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length) : null;
+  if (!token || token !== process.env.APP_PASSWORD) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+  res.json({ ok: true });
+});
 app.use("/api/items", requireAuth, itemsRouter);
 app.use("/api/categories", requireAuth, categoriesRouter);
 app.use("/api/types", requireAuth, typesRouter);

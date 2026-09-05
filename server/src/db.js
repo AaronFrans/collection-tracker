@@ -34,9 +34,7 @@ export async function migrate() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type_id INTEGER NOT NULL REFERENCES types(id),
       title TEXT NOT NULL,
-      platform TEXT,
       category_id INTEGER REFERENCES categories(id),
-      condition TEXT,
       purchase_price REAL,
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -48,12 +46,20 @@ export async function migrate() {
   const hasCategoryId = columns.some((row) => row.name === "category_id");
   const hasTypeId = columns.some((row) => row.name === "type_id");
   const hasLegacyType = columns.some((row) => row.name === "type");
+  const hasPlatform = columns.some((row) => row.name === "platform");
+  const hasCondition = columns.some((row) => row.name === "condition");
 
   if (!hasCategoryId) {
     await db.execute("ALTER TABLE items ADD COLUMN category_id INTEGER REFERENCES categories(id)");
   }
   if (!hasTypeId) {
     await db.execute("ALTER TABLE items ADD COLUMN type_id INTEGER REFERENCES types(id)");
+  }
+  if (hasPlatform) {
+    await db.execute("ALTER TABLE items DROP COLUMN platform");
+  }
+  if (hasCondition) {
+    await db.execute("ALTER TABLE items DROP COLUMN condition");
   }
 
   if (hasLegacyType) {

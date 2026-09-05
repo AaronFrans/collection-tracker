@@ -3,12 +3,20 @@
 A small vibe coded personal tracker for games and collectibles you own, accessible from anywhere.
 
 - `server/` — Express API, backed by [Turso](https://turso.tech) (hosted SQLite-compatible DB via `@libsql/client`).
-- `client/` — React (Vite) frontend: add/edit/delete items, filter by type, search.
+- `client/` — React (Vite) frontend: add/edit/delete items, filter by type/category, search.
+- `docs/` — GitHub Pages redirect to the deployed client, for a shorter URL.
 
 ## Data model
 
-Single `items` table: `type` (`game` | `collectible`), `title`, `platform` (games) or `category` (collectibles),
-`condition`, `purchase_price`, `notes`, timestamps.
+- `items`: `type` (from a user-managed list), `title`, `category` (also user-managed, optional), `purchase_price`,
+  `notes`, timestamps.
+- `types` / `categories`: freely add/rename/delete your own — e.g. types like "Game", "Board Game", "Comic";
+  categories like "Amiibo", "Switch", "Sealed".
+
+## Access
+
+- **Viewing** the tracker needs no password — anyone with the link can browse.
+- **Adding, editing, or deleting** anything (items, types, categories) requires the `APP_PASSWORD` set on the server.
 
 ## Local development
 
@@ -20,18 +28,20 @@ turso db show collection-tracker --url
 turso db tokens create collection-tracker
 ```
 
-(Install the CLI first: see https://docs.turso.tech/cli/installation)
+(Install the CLI first: see https://docs.turso.tech/cli/installation — no Windows build, use the web dashboard at
+https://turso.tech instead if you're on Windows.)
 
 ### 2. Server
 
+
 ```
 cd server
-cp .env.example .env   # fill in TURSO_DATABASE_URL and TURSO_AUTH_TOKEN
+cp .env.example .env   # fill in TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, APP_PASSWORD
 npm install
 npm run dev             # http://localhost:3001
 ```
 
-The `items` table is created automatically on startup if it doesn't exist.
+The database schema is created/migrated automatically on startup.
 
 ### 3. Client
 
@@ -46,3 +56,5 @@ npm run dev             # http://localhost:5173
 
 - **Database**: [Turso](https://turso.tech)
 - **API + client**: [Render](https://render.com)
+- **Short URL**: GitHub Pages, serving `docs/` — redirects to the deployed client so you don't have to remember/share
+  the full `onrender.com` URL.

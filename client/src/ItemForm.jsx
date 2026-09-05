@@ -3,9 +3,7 @@ import { useState } from "react";
 const EMPTY = {
   typeId: "",
   title: "",
-  platform: "",
   categoryId: "",
-  condition: "",
   purchasePrice: "",
   notes: "",
 };
@@ -60,14 +58,6 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
       </div>
       <div className="field-row">
         <label>
-          Platform
-          <input
-            value={form.platform || ""}
-            onChange={(e) => update("platform", e.target.value)}
-            placeholder="e.g. Switch"
-          />
-        </label>
-        <label>
           Category
           <select value={form.categoryId ?? ""} onChange={(e) => update("categoryId", e.target.value)}>
             <option value="">None</option>
@@ -77,14 +67,6 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
               </option>
             ))}
           </select>
-        </label>
-        <label>
-          Condition
-          <input
-            value={form.condition || ""}
-            onChange={(e) => update("condition", e.target.value)}
-            placeholder="e.g. Sealed, CIB, Loose"
-          />
         </label>
         <label>
           Purchase price

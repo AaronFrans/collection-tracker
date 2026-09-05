@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { api, UnauthorizedError } from "./api";
-import { getToken, clearToken } from "./auth";
+import { api, UnauthorizedError, ForbiddenError } from "./api";
+import { isAdmin, clearToken } from "./auth";
 import { ItemForm } from "./ItemForm";
 import { ItemList } from "./ItemList";
 import { NamedListManager } from "./NamedListManager";
@@ -8,7 +8,8 @@ import { Login } from "./Login";
 import "./App.css";
 
 export default function App() {
-  const [authed, setAuthed] = useState(!!getToken());
+  const [admin, setAdmin] = useState(isAdmin());
+  const [showLogin, setShowLogin] = useState(false);
   const [items, setItems] = useState([]);
   const [types, setTypes] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -20,7 +21,12 @@ export default function App() {
 
   function handleError(err) {
     if (err instanceof UnauthorizedError) {
-      setAuthed(false);
+      setAdmin(false);
+      setError("Your session expired — log in again to make changes.");
+      return;
+    }
+    if (err instanceof ForbiddenError) {
+      setError("Read-only access — log in to make changes.");
       return;
     }
     setError(err.message);
@@ -58,17 +64,14 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!authed) return;
     refreshTypes();
     refreshCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed]);
+  }, []);
 
   useEffect(() => {
-    if (!authed) return;
     refreshItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed, typeFilter, categoryFilter, search]);
+  }, [typeFilter, categoryFilter, search]);
 
   async function handleCreate(values) {
     try {
@@ -136,21 +139,38 @@ export default function App() {
 
   function handleLogout() {
     clearToken();
-    setAuthed(false);
+    setAdmin(false);
   }
 
-  if (!authed) {
-    return <Login onSuccess={() => setAuthed(true)} />;
-  }
+  const readOnly = !admin;
 
   return (
     <div className="app">
       <div className="page-header">
         <h1>Collection Tracker</h1>
-        <button className="secondary" onClick={handleLogout}>
-          Log out
-        </button>
+        {admin ? (
+          <button className="secondary" onClick={handleLogout}>
+            Log out
+          </button>
+        ) : (
+          !showLogin && (
+            <button className="secondary" onClick={() => setShowLogin(true)}>
+              Log in
+            </button>
+          )
+        )}
       </div>
+
+      {showLogin && !admin && (
+        <Login
+          onSuccess={() => {
+            setAdmin(true);
+            setShowLogin(false);
+            setError(null);
+          }}
+          onCancel={() => setShowLogin(false)}
+        />
+      )}
 
       <section className="card">
         <h2>Types</h2>
@@ -159,6 +179,7 @@ export default function App() {
           onCreate={handleCreateType}
           onDelete={handleDeleteType}
           placeholder="New type, e.g. Board Game"
+          readOnly={readOnly}
         />
       </section>
 
@@ -169,13 +190,16 @@ export default function App() {
           onCreate={handleCreateCategory}
           onDelete={handleDeleteCategory}
           placeholder="New category, e.g. Amiibo"
+          readOnly={readOnly}
         />
       </section>
 
-      <section className="card">
-        <h2>Add item</h2>
-        <ItemForm onSubmit={handleCreate} types={types} categories={categories} />
-      </section>
+      {!readOnly && (
+        <section className="card">
+          <h2>Add item</h2>
+          <ItemForm onSubmit={handleCreate} types={types} categories={categories} />
+        </section>
+      )}
 
       <section className="card">
         <div className="toolbar">
@@ -196,7 +220,7 @@ export default function App() {
             ))}
           </select>
           <input
-            placeholder="Search title / platform / category"
+            placeholder="Search title / category"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -206,7 +230,14 @@ export default function App() {
         {loading ? (
           <p>Loading…</p>
         ) : (
-          <ItemList items={items} types={types} categories={categories} onUpdate={handleUpdate} onDelete={handleDelete} />
+          <ItemList
+            items={items}
+            types={types}
+            categories={categories}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            readOnly={readOnly}
+          />
         )}
       </section>
     </div>

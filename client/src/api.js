@@ -3,6 +3,7 @@ import { getToken, clearToken } from "./auth";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 export class UnauthorizedError extends Error {}
+export class ForbiddenError extends Error {}
 
 async function request(path, options = {}) {
   const token = getToken();
@@ -17,6 +18,9 @@ async function request(path, options = {}) {
   if (res.status === 401) {
     clearToken();
     throw new UnauthorizedError("unauthorized");
+  }
+  if (res.status === 403) {
+    throw new ForbiddenError("read-only access");
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

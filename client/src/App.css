@@ -207,20 +207,11 @@ button.secondary {
   margin: 0;
 }
 
-.login-screen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .login-form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  width: 100%;
   max-width: 280px;
-  padding: 1.5rem;
 }
 
 .login-form label {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "./api";
 import { setToken } from "./auth";
 
-export function Login({ onSuccess }) {
+export function Login({ onSuccess, onCancel }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [checking, setChecking] = useState(false);
@@ -27,23 +27,25 @@ export function Login({ onSuccess }) {
   }
 
   return (
-    <div className="login-screen">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h1>Collection Tracker</h1>
-        <label>
-          Password
-          <input
-            type="password"
-            autoFocus
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {error && <p className="error">{error}</p>}
+    <form className="login-form card" onSubmit={handleSubmit}>
+      <label>
+        Password
+        <input
+          type="password"
+          autoFocus
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </label>
+      {error && <p className="error">{error}</p>}
+      <div className="field-row">
         <button type="submit" disabled={checking}>
-          {checking ? "Checking…" : "Enter"}
+          {checking ? "Checking…" : "Log in"}
         </button>
-      </form>
-    </div>
+        <button type="button" className="secondary" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }

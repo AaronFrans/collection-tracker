@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../db.js";
+import { requireWrite } from "../middleware/auth.js";
 
 export const categoriesRouter = Router();
 
@@ -8,7 +9,7 @@ categoriesRouter.get("/", async (req, res) => {
   res.json(result.rows.map((row) => ({ id: row.id, name: row.name })));
 });
 
-categoriesRouter.post("/", async (req, res) => {
+categoriesRouter.post("/", requireWrite, async (req, res) => {
   const { name } = req.body;
   if (!name || typeof name !== "string" || !name.trim()) {
     return res.status(400).json({ error: "name is required" });
@@ -28,7 +29,7 @@ categoriesRouter.post("/", async (req, res) => {
   }
 });
 
-categoriesRouter.delete("/:id", async (req, res) => {
+categoriesRouter.delete("/:id", requireWrite, async (req, res) => {
   const { id } = req.params;
   // Items referencing this category keep their row, just lose the category tag.
   await db.execute({ sql: "UPDATE items SET category_id = NULL WHERE category_id = ?", args: [id] });

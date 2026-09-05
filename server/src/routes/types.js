@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../db.js";
+import { requireWrite } from "../middleware/auth.js";
 
 export const typesRouter = Router();
 
@@ -8,7 +9,7 @@ typesRouter.get("/", async (req, res) => {
   res.json(result.rows.map((row) => ({ id: row.id, name: row.name })));
 });
 
-typesRouter.post("/", async (req, res) => {
+typesRouter.post("/", requireWrite, async (req, res) => {
   const { name } = req.body;
   if (!name || typeof name !== "string" || !name.trim()) {
     return res.status(400).json({ error: "name is required" });
@@ -28,7 +29,7 @@ typesRouter.post("/", async (req, res) => {
   }
 });
 
-typesRouter.delete("/:id", async (req, res) => {
+typesRouter.delete("/:id", requireWrite, async (req, res) => {
   const { id } = req.params;
   const inUse = await db.execute({ sql: "SELECT id FROM items WHERE type_id = ? LIMIT 1", args: [id] });
   if (inUse.rows.length > 0) {

@@ -8,6 +8,10 @@ export function getToken() {
   }
 }
 
+export function isAdmin() {
+  return !!getToken();
+}
+
 export function setToken(token) {
   try {
     localStorage.setItem(TOKEN_KEY, token);
