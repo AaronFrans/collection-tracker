@@ -199,7 +199,7 @@ export default function App() {
       {!readOnly && (
         <section className="card">
           <h2>Add item</h2>
-          <ItemForm onSubmit={handleCreate} types={types} categories={categories} />
+          <ItemForm onSubmit={handleCreate} types={types} categories={categories} items={items} />
         </section>
       )}
 

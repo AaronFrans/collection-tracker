@@ -34,11 +34,19 @@ export async function migrate() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type_id INTEGER NOT NULL REFERENCES types(id),
       title TEXT NOT NULL,
-      category_id INTEGER REFERENCES categories(id),
+      parent_id INTEGER REFERENCES items(id),
       wishlist INTEGER NOT NULL DEFAULT 0,
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS item_categories (
+      item_id INTEGER NOT NULL REFERENCES items(id),
+      category_id INTEGER NOT NULL REFERENCES categories(id),
+      PRIMARY KEY (item_id, category_id)
     )
   `);
 
@@ -50,15 +58,16 @@ export async function migrate() {
   const hasCondition = columns.some((row) => row.name === "condition");
   const hasPurchasePrice = columns.some((row) => row.name === "purchase_price");
   const hasWishlist = columns.some((row) => row.name === "wishlist");
+  const hasParentId = columns.some((row) => row.name === "parent_id");
 
-  if (!hasCategoryId) {
-    await db.execute("ALTER TABLE items ADD COLUMN category_id INTEGER REFERENCES categories(id)");
-  }
   if (!hasTypeId) {
     await db.execute("ALTER TABLE items ADD COLUMN type_id INTEGER REFERENCES types(id)");
   }
   if (!hasWishlist) {
     await db.execute("ALTER TABLE items ADD COLUMN wishlist INTEGER NOT NULL DEFAULT 0");
+  }
+  if (!hasParentId) {
+    await db.execute("ALTER TABLE items ADD COLUMN parent_id INTEGER REFERENCES items(id)");
   }
   if (hasPlatform) {
     await db.execute("ALTER TABLE items DROP COLUMN platform");
@@ -68,6 +77,16 @@ export async function migrate() {
   }
   if (hasPurchasePrice) {
     await db.execute("ALTER TABLE items DROP COLUMN purchase_price");
+  }
+
+  if (hasCategoryId) {
+    // Older databases had a single `category_id` column on items — move that into the new
+    // many-to-many item_categories table, then drop the column.
+    await db.execute(`
+      INSERT OR IGNORE INTO item_categories (item_id, category_id)
+      SELECT id, category_id FROM items WHERE category_id IS NOT NULL
+    `);
+    await db.execute("ALTER TABLE items DROP COLUMN category_id");
   }
 
   if (hasLegacyType) {
@@ -90,7 +109,7 @@ export async function migrate() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type_id INTEGER NOT NULL REFERENCES types(id),
         title TEXT NOT NULL,
-        category_id INTEGER REFERENCES categories(id),
+        parent_id INTEGER REFERENCES items(id),
         wishlist INTEGER NOT NULL DEFAULT 0,
         notes TEXT,
         created_at TEXT NOT NULL,
@@ -98,8 +117,8 @@ export async function migrate() {
       )
     `);
     await db.execute(`
-      INSERT INTO items_new (id, type_id, title, category_id, wishlist, notes, created_at, updated_at)
-      SELECT id, type_id, title, category_id, wishlist, notes, created_at, updated_at FROM items
+      INSERT INTO items_new (id, type_id, title, parent_id, wishlist, notes, created_at, updated_at)
+      SELECT id, type_id, title, parent_id, wishlist, notes, created_at, updated_at FROM items
     `);
     await db.execute("DROP TABLE items");
     await db.execute("ALTER TABLE items_new RENAME TO items");

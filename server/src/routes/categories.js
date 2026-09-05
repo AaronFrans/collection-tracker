@@ -31,8 +31,8 @@ categoriesRouter.post("/", requireWrite, async (req, res) => {
 
 categoriesRouter.delete("/:id", requireWrite, async (req, res) => {
   const { id } = req.params;
-  // Items referencing this category keep their row, just lose the category tag.
-  await db.execute({ sql: "UPDATE items SET category_id = NULL WHERE category_id = ?", args: [id] });
+  // Items tagged with this category keep their row, just lose that tag.
+  await db.execute({ sql: "DELETE FROM item_categories WHERE category_id = ?", args: [id] });
   const result = await db.execute({ sql: "DELETE FROM categories WHERE id = ? RETURNING id", args: [id] });
   if (result.rows.length === 0) {
     return res.status(404).json({ error: "not found" });

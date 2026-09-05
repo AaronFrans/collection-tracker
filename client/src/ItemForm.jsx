@@ -3,15 +3,22 @@ import { useEffect, useState } from "react";
 const EMPTY = {
   typeId: "",
   title: "",
-  categoryId: "",
+  categoryIds: [],
+  parentId: "",
   wishlist: false,
   notes: "",
 };
 
-export function ItemForm({ onSubmit, initial, onCancel, types = [], categories = [] }) {
+export function ItemForm({ onSubmit, initial, onCancel, types = [], categories = [], items = [] }) {
   const [form, setForm] = useState(
     initial
-      ? { ...EMPTY, ...initial, typeId: initial.typeId ?? "", categoryId: initial.categoryId ?? "" }
+      ? {
+          ...EMPTY,
+          ...initial,
+          typeId: initial.typeId ?? "",
+          categoryIds: (initial.categories ?? []).map((category) => category.id),
+          parentId: initial.parentId ?? "",
+        }
       : { ...EMPTY, typeId: types[0]?.id ?? "" }
   );
 
@@ -24,8 +31,20 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [types]);
 
+  // Only top-level items can be a parent — keeps the hierarchy to one level.
+  const parentOptions = items.filter((item) => item.parentId == null && item.id !== initial?.id);
+
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function toggleCategory(categoryId) {
+    setForm((prev) => ({
+      ...prev,
+      categoryIds: prev.categoryIds.includes(categoryId)
+        ? prev.categoryIds.filter((id) => id !== categoryId)
+        : [...prev.categoryIds, categoryId],
+    }));
   }
 
   function handleSubmit(e) {
@@ -33,7 +52,7 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
     onSubmit({
       ...form,
       typeId: form.typeId === "" ? null : Number(form.typeId),
-      categoryId: form.categoryId === "" ? null : Number(form.categoryId),
+      parentId: form.parentId === "" ? null : Number(form.parentId),
     });
     if (!initial) setForm({ ...EMPTY, typeId: types[0]?.id ?? "" });
   }
@@ -63,19 +82,6 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
             placeholder="e.g. Super Mario Odyssey"
           />
         </label>
-      </div>
-      <div className="field-row">
-        <label>
-          Category
-          <select value={form.categoryId ?? ""} onChange={(e) => update("categoryId", e.target.value)}>
-            <option value="">None</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
         <label className="checkbox-label">
           <input
             type="checkbox"
@@ -85,6 +91,39 @@ export function ItemForm({ onSubmit, initial, onCancel, types = [], categories =
           Wishlist
         </label>
       </div>
+
+      {parentOptions.length > 0 && (
+        <label>
+          Part of collection
+          <select value={form.parentId} onChange={(e) => update("parentId", e.target.value)}>
+            <option value="">None — top-level item</option>
+            {parentOptions.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {categories.length > 0 && (
+        <div className="field-block">
+          <span className="field-label">Categories</span>
+          <div className="checkbox-grid">
+            {categories.map((category) => (
+              <label key={category.id} className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.categoryIds.includes(category.id)}
+                  onChange={() => toggleCategory(category.id)}
+                />
+                {category.name}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       <label>
         Notes
         <textarea value={form.notes || ""} onChange={(e) => update("notes", e.target.value)} rows={2} />
