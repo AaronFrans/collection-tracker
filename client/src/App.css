@@ -1,0 +1,205 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+h1 {
+  margin-bottom: 1rem;
+}
+
+.card {
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.item-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.item-form input,
+.item-form select,
+.item-form textarea {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: transparent;
+  color: inherit;
+}
+
+.field-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.field-row .grow {
+  flex: 1;
+}
+
+button {
+  font: inherit;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: #2b6cb0;
+  color: white;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: transparent;
+  color: inherit;
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.toolbar input {
+  flex: 1;
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: transparent;
+  color: inherit;
+}
+
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.item-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-info .notes {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+}
+
+.meta {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(128, 128, 128, 0.25);
+}
+
+.badge-game {
+  background: #2b6cb033;
+}
+
+.badge-collectible {
+  background: #b0762b33;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.error {
+  color: #e53e3e;
+}
+
+.empty {
+  opacity: 0.6;
+}
+
+.category-manager .field-row {
+  margin-bottom: 0.75rem;
+}
+
+.category-manager input {
+  flex: 1;
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: transparent;
+  color: inherit;
+}
+
+.category-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(128, 128, 128, 0.2);
+  font-size: 0.85rem;
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0 0.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
