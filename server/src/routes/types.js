@@ -1,15 +1,16 @@
 import { Router } from "express";
 import { db } from "../db.js";
 import { requireWrite } from "../middleware/auth.js";
+import { asyncHandler } from "../asyncHandler.js";
 
 export const typesRouter = Router();
 
-typesRouter.get("/", async (req, res) => {
+typesRouter.get("/", asyncHandler(async (req, res) => {
   const result = await db.execute("SELECT * FROM types ORDER BY name COLLATE NOCASE");
   res.json(result.rows.map((row) => ({ id: row.id, name: row.name })));
-});
+}));
 
-typesRouter.post("/", requireWrite, async (req, res) => {
+typesRouter.post("/", requireWrite, asyncHandler(async (req, res) => {
   const { name } = req.body;
   if (!name || typeof name !== "string" || !name.trim()) {
     return res.status(400).json({ error: "name is required" });
@@ -27,9 +28,9 @@ typesRouter.post("/", requireWrite, async (req, res) => {
     }
     throw err;
   }
-});
+}));
 
-typesRouter.delete("/:id", requireWrite, async (req, res) => {
+typesRouter.delete("/:id", requireWrite, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const inUse = await db.execute({ sql: "SELECT id FROM items WHERE type_id = ? LIMIT 1", args: [id] });
   if (inUse.rows.length > 0) {
@@ -40,4 +41,4 @@ typesRouter.delete("/:id", requireWrite, async (req, res) => {
     return res.status(404).json({ error: "not found" });
   }
   res.status(204).send();
-});
+}));

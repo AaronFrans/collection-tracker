@@ -34,6 +34,7 @@ https://turso.tech instead if you're on Windows.)
 ### 2. Server
 
 
+
 ```
 cd server
 cp .env.example .env   # fill in TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, APP_PASSWORD

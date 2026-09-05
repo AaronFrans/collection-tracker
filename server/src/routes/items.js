@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "../db.js";
 import { requireWrite } from "../middleware/auth.js";
+import { asyncHandler } from "../asyncHandler.js";
 
 export const itemsRouter = Router();
 
@@ -95,7 +96,7 @@ const SELECT_ITEMS = `
   LEFT JOIN items AS parent ON parent.id = items.parent_id
 `;
 
-itemsRouter.get("/", async (req, res) => {
+itemsRouter.get("/", asyncHandler(async (req, res) => {
   const { typeId, categoryId, wishlist, parentId, q } = req.query;
   const clauses = [];
   const args = [];
@@ -138,9 +139,9 @@ itemsRouter.get("/", async (req, res) => {
     args,
   });
   res.json(await attachCategories(result.rows.map(toItem)));
-});
+}));
 
-itemsRouter.post("/", requireWrite, async (req, res) => {
+itemsRouter.post("/", requireWrite, asyncHandler(async (req, res) => {
   const { typeId, title, categoryIds, parentId, wishlist, notes } = req.body;
   const cleanCategoryIds = Array.isArray(categoryIds) ? [...new Set(categoryIds)] : [];
 
@@ -170,9 +171,9 @@ itemsRouter.post("/", requireWrite, async (req, res) => {
   const result = await db.execute({ sql: `${SELECT_ITEMS} WHERE items.id = ?`, args: [itemId] });
   const [item] = await attachCategories(result.rows.map(toItem));
   res.status(201).json(item);
-});
+}));
 
-itemsRouter.put("/:id", requireWrite, async (req, res) => {
+itemsRouter.put("/:id", requireWrite, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { typeId, title, categoryIds, parentId, wishlist, notes } = req.body;
 
@@ -215,9 +216,9 @@ itemsRouter.put("/:id", requireWrite, async (req, res) => {
   const result = await db.execute({ sql: `${SELECT_ITEMS} WHERE items.id = ?`, args: [id] });
   const [item] = await attachCategories(result.rows.map(toItem));
   res.json(item);
-});
+}));
 
-itemsRouter.delete("/:id", requireWrite, async (req, res) => {
+itemsRouter.delete("/:id", requireWrite, asyncHandler(async (req, res) => {
   const { id } = req.params;
   // Sub-items of a deleted collection become top-level items rather than being deleted too.
   await db.execute({ sql: "UPDATE items SET parent_id = NULL WHERE parent_id = ?", args: [id] });
@@ -227,4 +228,4 @@ itemsRouter.delete("/:id", requireWrite, async (req, res) => {
     return res.status(404).json({ error: "not found" });
   }
   res.status(204).send();
-});
+}));

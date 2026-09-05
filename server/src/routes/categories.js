@@ -1,15 +1,16 @@
 import { Router } from "express";
 import { db } from "../db.js";
 import { requireWrite } from "../middleware/auth.js";
+import { asyncHandler } from "../asyncHandler.js";
 
 export const categoriesRouter = Router();
 
-categoriesRouter.get("/", async (req, res) => {
+categoriesRouter.get("/", asyncHandler(async (req, res) => {
   const result = await db.execute("SELECT * FROM categories ORDER BY name COLLATE NOCASE");
   res.json(result.rows.map((row) => ({ id: row.id, name: row.name })));
-});
+}));
 
-categoriesRouter.post("/", requireWrite, async (req, res) => {
+categoriesRouter.post("/", requireWrite, asyncHandler(async (req, res) => {
   const { name } = req.body;
   if (!name || typeof name !== "string" || !name.trim()) {
     return res.status(400).json({ error: "name is required" });
@@ -27,9 +28,9 @@ categoriesRouter.post("/", requireWrite, async (req, res) => {
     }
     throw err;
   }
-});
+}));
 
-categoriesRouter.delete("/:id", requireWrite, async (req, res) => {
+categoriesRouter.delete("/:id", requireWrite, asyncHandler(async (req, res) => {
   const { id } = req.params;
   // Items tagged with this category keep their row, just lose that tag.
   await db.execute({ sql: "DELETE FROM item_categories WHERE category_id = ?", args: [id] });
@@ -38,4 +39,4 @@ categoriesRouter.delete("/:id", requireWrite, async (req, res) => {
     return res.status(404).json({ error: "not found" });
   }
   res.status(204).send();
-});
+}));

@@ -29,6 +29,12 @@ app.use("/api/items", requireAuth, itemsRouter);
 app.use("/api/categories", requireAuth, categoriesRouter);
 app.use("/api/types", requireAuth, typesRouter);
 
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: "internal server error" });
+});
+
 await migrate();
 
 app.listen(port, () => {
